@@ -4,9 +4,8 @@ go 1.22
 
 require (
 	fyne.io/fyne/v2 v2.6.3
-	github.com/edsrzf/mmap-go v1.2.0
-	github.com/mattn/go-sqlite3 v1.14.52
 	github.com/hillu/go-yara/v4 v4.3.4
+	github.com/mattn/go-sqlite3 v1.14.52
 	github.com/yalue/onnxruntime_go v1.36.0
 	golang.org/x/sys v0.30.0
 )
