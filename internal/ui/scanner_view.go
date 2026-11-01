@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"sync"
+	"sync/atomic"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
@@ -18,29 +19,29 @@ import (
 // ScannerView provides the dedicated scanner dashboard with circular progress bar,
 // player controls (Play/Pause/Resume/Stop), target directory selection, and real-time detected files.
 type ScannerView struct {
-	svc          scanner.Service
-	window       fyne.Window
-	root         fyne.CanvasObject
+	svc    scanner.Service
+	window fyne.Window
+	root   fyne.CanvasObject
 
-	targetDir    string
-	dirLabel     *widget.Label
-	browseBtn    *widget.Button
+	targetDir string
+	dirLabel  *widget.Label
+	browseBtn *widget.Button
 
-	circle       *CircularProgress
-	thinBar      *ThinProgress
-	currentFile  *canvas.Text
+	circle      *CircularProgress
+	thinBar     *ThinProgress
+	currentFile *canvas.Text
 
-	playBtn      *widget.Button
-	pauseBtn     *widget.Button
-	stopBtn      *widget.Button
-	modeRadio    *widget.RadioGroup
+	playBtn   *widget.Button
+	pauseBtn  *widget.Button
+	stopBtn   *widget.Button
+	modeRadio *widget.RadioGroup
 
 	detectedList *DetectedList
 
 	scanning      bool
 	paused        bool
 	cancel        context.CancelFunc
-	generation    uint64
+	generation    atomic.Uint64
 	onVaultUpdate func()
 	scanWg        sync.WaitGroup
 }
@@ -188,8 +189,7 @@ func (sv *ScannerView) handlePlay() {
 
 	sv.scanning = true
 	sv.paused = false
-	sv.generation++
-	generation := sv.generation
+	generation := sv.generation.Add(1)
 
 	sv.playBtn.SetText("▶ Scanning...")
 	sv.playBtn.Disable()
@@ -255,7 +255,7 @@ func (sv *ScannerView) handleStop() {
 		sv.cancel()
 		sv.cancel = nil
 	}
-	sv.generation++
+	sv.generation.Add(1)
 	if ctrl, ok := sv.svc.(scanner.ScanController); ok && sv.paused {
 		ctrl.Resume()
 	}
@@ -274,7 +274,7 @@ func (sv *ScannerView) consumeEvents(events <-chan scanner.Event, generation uin
 	for ev := range events {
 		event := ev
 		fyne.Do(func() {
-			if generation != sv.generation {
+			if generation != sv.generation.Load() {
 				return
 			}
 			sv.thinBar.SetValue(event.Progress)
@@ -290,7 +290,7 @@ func (sv *ScannerView) consumeEvents(events <-chan scanner.Event, generation uin
 	done := make(chan struct{})
 	fyne.Do(func() {
 		defer close(done)
-		if generation == sv.generation {
+		if generation == sv.generation.Load() {
 			sv.finishScan()
 		}
 	})

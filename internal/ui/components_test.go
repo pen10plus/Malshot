@@ -93,6 +93,21 @@ func TestScannerViewComponent(t *testing.T) {
 	sv.Wait()
 }
 
+func TestScannerViewImmediateStopComponent(t *testing.T) {
+	mockSvc := scanner.NewMock(scanner.WithTick(100 * time.Millisecond))
+	window := test.NewWindow(nil)
+	defer window.Close()
+
+	sv := NewScannerView(mockSvc, window, nil)
+	test.Tap(sv.playBtn)
+	test.Tap(sv.stopBtn)
+	sv.Wait()
+
+	if sv.scanning {
+		t.Error("expected scanning to be false after immediate stop")
+	}
+}
+
 func TestSettingsViewComponent(t *testing.T) {
 	mockSvc := scanner.NewMock()
 	sv := newSettingsView(mockSvc)
