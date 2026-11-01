@@ -1,0 +1,85 @@
+name: MalShot CI/CD
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lint-and-test:
+    name: Go Test & Verification
+    runs-on: windows-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+          check-latest: true
+          cache: true
+
+      - name: Verify Module Dependencies
+        run: go mod verify
+
+      - name: Run Go Vet
+        run: go vet ./...
+
+      - name: Run Unit & Integration Tests
+        run: go test -v -race ./...
+
+  python-validation:
+    name: Python Scripts Verification
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Compile and Lint Python Scripts
+        run: |
+          python -m py_compile \
+            db_manager.py \
+            colab_bridge.py \
+            package_release.py \
+            repair_manifest.py \
+            build_and_store_rules.py \
+            train_lstm.py \
+            test_malshot.py \
+            prepare_qa_dataset.py
+
+  build-release-artifact:
+    name: Build Windows Release Binary
+    needs: [lint-and-test, python-validation]
+    runs-on: windows-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+          cache: true
+
+      - name: Compile MalShot Production Executable
+        run: |
+          go build -trimpath -ldflags="-s -w -H=windowsgui" -o bin/malshot.exe .
+
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: malshot-windows-amd64
+          path: bin/malshot.exe
+          if-no-files-found: error

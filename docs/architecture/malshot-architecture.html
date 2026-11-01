@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MalShot Defender - System Architecture</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: #020617;
+      color: #f8fafc;
+      font-family: 'JetBrains Mono', monospace;
+      padding: 32px 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+    header {
+      width: 100%;
+      max-width: 1100px;
+      margin-bottom: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .header-title-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .pulsing-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background-color: #34d399;
+      box-shadow: 0 0 12px #34d399;
+      animation: pulse 2s infinite ease-in-out;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+    h1 {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      color: #f8fafc;
+    }
+    .badge {
+      background: rgba(34, 211, 238, 0.15);
+      border: 1px solid #22d3ee;
+      color: #22d3ee;
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+    p.subtitle {
+      font-size: 12px;
+      color: #94a3b8;
+    }
+    .diagram-card {
+      width: 100%;
+      max-width: 1100px;
+      background-color: #0b1329;
+      border: 1px solid #1e293b;
+      border-radius: 12px;
+      padding: 24px;
+      overflow-x: auto;
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.7);
+      margin-bottom: 24px;
+    }
+    svg {
+      display: block;
+      margin: 0 auto;
+      width: 100%;
+      max-width: 1050px;
+      height: auto;
+    }
+    .cards-grid {
+      width: 100%;
+      max-width: 1100px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    @media (max-width: 860px) {
+      .cards-grid { grid-template-columns: 1fr; }
+    }
+    .card {
+      background: #0f172a;
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      padding: 16px;
+    }
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .card-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+    .card-dot.cyan { background-color: #22d3ee; }
+    .card-dot.emerald { background-color: #34d399; }
+    .card-dot.rose { background-color: #fb7185; }
+    .card-dot.violet { background-color: #a78bfa; }
+    .card-dot.amber { background-color: #fbbf24; }
+    .card h3 {
+      font-size: 13px;
+      font-weight: 600;
+      color: #f1f5f9;
+    }
+    .card ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .card li {
+      font-size: 11px;
+      color: #94a3b8;
+      line-height: 1.5;
+    }
+    .card li strong {
+      color: #cbd5e1;
+    }
+    footer {
+      width: 100%;
+      max-width: 1100px;
+      font-size: 11px;
+      color: #64748b;
+      display: flex;
+      justify-content: space-between;
+      border-top: 1px solid #1e293b;
+      padding-top: 16px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-title-row">
+      <div class="pulsing-dot"></div>
+      <h1>MALSHOT DEFENDER // SYSTEM ARCHITECTURE</h1>
+      <span class="badge">v2.1 VERIFIED</span>
+    </div>
+    <p class="subtitle">Offline-First Windows Malware Defense Pipeline with Dual-Engine Deep Inspection (YARA 4.5 + ONNX Runtime 1.36)</p>
+  </header>
+
+  <div class="diagram-card">
+    <svg viewBox="0 0 1050 620" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <!-- Background Grid -->
+        <pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse">
+          <path d="M 30 0 L 0 0 0 30" fill="none" stroke="#131e36" stroke-width="0.7"/>
+        </pattern>
+        <!-- Arrowhead Marker (Cyan) -->
+        <marker id="arrow-cyan" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#22d3ee" />
+        </marker>
+        <!-- Arrowhead Marker (Emerald) -->
+        <marker id="arrow-emerald" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#34d399" />
+        </marker>
+        <!-- Arrowhead Marker (Rose) -->
+        <marker id="arrow-rose" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#fb7185" />
+        </marker>
+        <!-- Arrowhead Marker (Violet) -->
+        <marker id="arrow-violet" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#a78bfa" />
+        </marker>
+        <!-- Arrowhead Marker (Amber) -->
+        <marker id="arrow-amber" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#fbbf24" />
+        </marker>
+      </defs>
+
+      <!-- Background with Grid -->
+      <rect width="1050" height="620" fill="#060c1d"/>
+      <rect width="1050" height="620" fill="url(#grid)"/>
+
+      <!-- BOUNDARY: UI & Control Layer -->
+      <rect x="25" y="20" width="220" height="490" rx="10" fill="none" stroke="#22d3ee" stroke-width="1.2" stroke-dasharray="6,4"/>
+      <text x="35" y="42" fill="#22d3ee" font-size="10" font-weight="700">PRESENTATION (FYNE GUI)</text>
+
+      <!-- BOUNDARY: Core Scanner Engine Layer -->
+      <rect x="270" y="20" width="460" height="490" rx="10" fill="none" stroke="#34d399" stroke-width="1.2" stroke-dasharray="6,4"/>
+      <text x="280" y="42" fill="#34d399" font-size="10" font-weight="700">CORE SCANNER ENGINE &amp; PIPELINE</text>
+
+      <!-- BOUNDARY: Deep Inspection Native Subsystem -->
+      <rect x="285" y="300" width="430" height="195" rx="8" fill="none" stroke="#fbbf24" stroke-width="1.2" stroke-dasharray="4,4"/>
+      <text x="295" y="320" fill="#fbbf24" font-size="9" font-weight="700">DEEP INSPECTION SUBSYSTEM (-tags deepinspection)</text>
+
+      <!-- BOUNDARY: Persistence & Vault Layer -->
+      <rect x="755" y="20" width="270" height="490" rx="10" fill="none" stroke="#a78bfa" stroke-width="1.2" stroke-dasharray="6,4"/>
+      <text x="765" y="42" fill="#a78bfa" font-size="10" font-weight="700">SECURITY, VAULT &amp; STORAGE</text>
+
+      <!-- FLOW CONNECTIONS (Behind Components) -->
+      <!-- UI to Engine -->
+      <path d="M 225 105 L 290 105" fill="none" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#arrow-cyan)"/>
+      <path d="M 290 145 L 225 145" fill="none" stroke="#34d399" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrow-cyan)"/>
+
+      <!-- Walker to Workers -->
+      <path d="M 390 125 L 390 160" fill="none" stroke="#34d399" stroke-width="1.5" marker-end="url(#arrow-emerald)"/>
+
+      <!-- Worker to Cache DB -->
+      <path d="M 500 195 L 780 105" fill="none" stroke="#a78bfa" stroke-width="1.5" marker-end="url(#arrow-violet)"/>
+
+      <!-- Worker to Signatures DB -->
+      <path d="M 500 205 L 780 205" fill="none" stroke="#a78bfa" stroke-width="1.5" marker-end="url(#arrow-violet)"/>
+
+      <!-- Worker to Deep Inspection -->
+      <path d="M 390 230 L 390 340" fill="none" stroke="#fbbf24" stroke-width="1.5" marker-end="url(#arrow-amber)"/>
+
+      <!-- Threat to Quarantine -->
+      <path d="M 500 220 L 780 340" fill="none" stroke="#fb7185" stroke-width="1.5" stroke-dasharray="5,4" marker-end="url(#arrow-rose)"/>
+
+      <!-- COMPONENT 1: Fyne Dashboard & Controls -->
+      <rect x="40" y="70" width="185" height="70" rx="6" fill="#0f172a"/>
+      <rect x="40" y="70" width="185" height="70" rx="6" fill="rgba(8, 51, 68, 0.45)" stroke="#22d3ee" stroke-width="1.5"/>
+      <text x="52" y="95" fill="#f8fafc" font-size="11" font-weight="600">Dashboard &amp; Shell</text>
+      <text x="52" y="112" fill="#94a3b8" font-size="8">Circular Progress Ring</text>
+      <text x="52" y="125" fill="#22d3ee" font-size="8">Play / Pause / Stop / Mode</text>
+
+      <!-- COMPONENT 2: Scanner View -->
+      <rect x="40" y="160" width="185" height="60" rx="6" fill="#0f172a"/>
+      <rect x="40" y="160" width="185" height="60" rx="6" fill="rgba(8, 51, 68, 0.45)" stroke="#22d3ee" stroke-width="1.5"/>
+      <text x="52" y="183" fill="#f8fafc" font-size="11" font-weight="600">Scanner View</text>
+      <text x="52" y="198" fill="#94a3b8" font-size="8">Folder Picker &amp; Path Status</text>
+      <text x="52" y="210" fill="#22d3ee" font-size="8">sync.WaitGroup &amp; fyne.Do()</text>
+
+      <!-- COMPONENT 3: Quarantine Vault UI -->
+      <rect x="40" y="240" width="185" height="60" rx="6" fill="#0f172a"/>
+      <rect x="40" y="240" width="185" height="60" rx="6" fill="rgba(8, 51, 68, 0.45)" stroke="#22d3ee" stroke-width="1.5"/>
+      <text x="52" y="263" fill="#f8fafc" font-size="11" font-weight="600">Vault Manager UI</text>
+      <text x="52" y="278" fill="#94a3b8" font-size="8">Incident Table &amp; History</text>
+      <text x="52" y="290" fill="#22d3ee" font-size="8">Authenticated Restore Action</text>
+
+      <!-- COMPONENT 4: Thread-Safe Event Bus -->
+      <rect x="40" y="325" width="185" height="60" rx="6" fill="#0f172a"/>
+      <rect x="40" y="325" width="185" height="60" rx="6" fill="rgba(251, 146, 60, 0.35)" stroke="#fb923c" stroke-width="1.5"/>
+      <text x="52" y="348" fill="#f8fafc" font-size="11" font-weight="600">UI Dispatcher Channel</text>
+      <text x="52" y="363" fill="#94a3b8" font-size="8">Generational Token Isolation</text>
+      <text x="52" y="375" fill="#fb923c" font-size="8">Zero-Race Channel Teardown</text>
+
+      <!-- COMPONENT 5: File Walker -->
+      <rect x="290" y="65" width="200" height="60" rx="6" fill="#0f172a"/>
+      <rect x="290" y="65" width="200" height="60" rx="6" fill="rgba(6, 78, 59, 0.45)" stroke="#34d399" stroke-width="1.5"/>
+      <text x="302" y="88" fill="#f8fafc" font-size="11" font-weight="600">Directory Walker</text>
+      <text x="302" y="103" fill="#94a3b8" font-size="8">filepath.WalkDir + Symlink Filter</text>
+      <text x="302" y="115" fill="#34d399" font-size="8">Bounded Channel Queue (512)</text>
+
+      <!-- COMPONENT 6: Worker Pool & Engine -->
+      <rect x="290" y="160" width="210" height="75" rx="6" fill="#0f172a"/>
+      <rect x="290" y="160" width="210" height="75" rx="6" fill="rgba(6, 78, 59, 0.45)" stroke="#34d399" stroke-width="1.5"/>
+      <text x="302" y="183" fill="#f8fafc" font-size="11" font-weight="600">Worker Pool (N-Cores)</text>
+      <text x="302" y="198" fill="#94a3b8" font-size="8">Streaming SHA-256 (1 MiB buffer)</text>
+      <text x="302" y="211" fill="#34d399" font-size="8">Pause / Resume sync.Cond</text>
+      <text x="302" y="224" fill="#fb7185" font-size="8">Multi-Stage Detection Engine</text>
+
+      <!-- COMPONENT 7: YARA Engine -->
+      <rect x="300" y="340" width="190" height="65" rx="6" fill="#0f172a"/>
+      <rect x="300" y="340" width="190" height="65" rx="6" fill="rgba(120, 53, 15, 0.35)" stroke="#fbbf24" stroke-width="1.5"/>
+      <text x="312" y="362" fill="#f8fafc" font-size="11" font-weight="600">YARA 4.5.8 Heuristics</text>
+      <text x="312" y="377" fill="#94a3b8" font-size="8">10 Community Rulesets (193 rules)</text>
+      <text x="312" y="390" fill="#fbbf24" font-size="8">ScanFile Concurrent Matcher</text>
+
+      <!-- COMPONENT 8: ONNX LSTM Model -->
+      <rect x="505" y="340" width="195" height="65" rx="6" fill="#0f172a"/>
+      <rect x="505" y="340" width="195" height="65" rx="6" fill="rgba(120, 53, 15, 0.35)" stroke="#fbbf24" stroke-width="1.5"/>
+      <text x="517" y="362" fill="#f8fafc" font-size="11" font-weight="600">ONNX Runtime 1.36</text>
+      <text x="517" y="377" fill="#94a3b8" font-size="8">4096-Byte Bytecode Window</text>
+      <text x="517" y="390" fill="#fbbf24" font-size="8">Confidence Score [0.0 - 1.0]</text>
+
+      <!-- COMPONENT 9: Native Memory & Lifecycle -->
+      <rect x="300" y="420" width="400" height="60" rx="6" fill="#0f172a"/>
+      <rect x="300" y="420" width="400" height="60" rx="6" fill="rgba(30, 41, 59, 0.6)" stroke="#94a3b8" stroke-width="1.5"/>
+      <text x="312" y="443" fill="#f8fafc" font-size="11" font-weight="600">CGO Memory &amp; Resource Lifecycle</text>
+      <text x="312" y="458" fill="#94a3b8" font-size="8">Explicit compiler.Destroy() + rules.Destroy() + DestroyONNX(session)</text>
+      <text x="312" y="470" fill="#34d399" font-size="8">Mutex-Protected Tensor Re-Use &amp; Session Cleanup</text>
+
+      <!-- COMPONENT 10: Local Cache Database -->
+      <rect x="780" y="65" width="220" height="65" rx="6" fill="#0f172a"/>
+      <rect x="780" y="65" width="220" height="65" rx="6" fill="rgba(76, 29, 149, 0.45)" stroke="#a78bfa" stroke-width="1.5"/>
+      <text x="792" y="88" fill="#f8fafc" font-size="11" font-weight="600">Scan Cache (local_state.db)</text>
+      <text x="792" y="103" fill="#94a3b8" font-size="8">SQLite WAL Mode + 30s Busy Timeout</text>
+      <text x="792" y="116" fill="#a78bfa" font-size="8">Path + Mtime + Size + SHA256 Key</text>
+
+      <!-- COMPONENT 11: Threat Signature DB -->
+      <rect x="780" y="165" width="220" height="65" rx="6" fill="#0f172a"/>
+      <rect x="780" y="165" width="220" height="65" rx="6" fill="rgba(76, 29, 149, 0.45)" stroke="#a78bfa" stroke-width="1.5"/>
+      <text x="792" y="188" fill="#f8fafc" font-size="11" font-weight="600">Signatures (signatures.db)</text>
+      <text x="792" y="203" fill="#94a3b8" font-size="8">30,703 Verified SHA-256 Hashes</text>
+      <text x="792" y="216" fill="#a78bfa" font-size="8">8 Threat Feeds (Bazaar, ThreatFox...)</text>
+
+      <!-- COMPONENT 12: DPAPI & Quarantine Vault -->
+      <rect x="780" y="270" width="220" height="85" rx="6" fill="#0f172a"/>
+      <rect x="780" y="270" width="220" height="85" rx="6" fill="rgba(136, 19, 55, 0.45)" stroke="#fb7185" stroke-width="1.5"/>
+      <text x="792" y="293" fill="#f8fafc" font-size="11" font-weight="600">Quarantine Vault (AES-GCM)</text>
+      <text x="792" y="308" fill="#94a3b8" font-size="8">Windows DPAPI Protected 256-bit Key</text>
+      <text x="792" y="321" fill="#fb7185" font-size="8">1 MiB Chunked Encryption (MSQ2)</text>
+      <text x="792" y="334" fill="#34d399" font-size="8">Tamper-Evident Header &amp; Auth Tag</text>
+
+      <!-- COMPONENT 13: Release Manifest Verifier -->
+      <rect x="780" y="390" width="220" height="65" rx="6" fill="#0f172a"/>
+      <rect x="780" y="390" width="220" height="65" rx="6" fill="rgba(30, 41, 59, 0.6)" stroke="#94a3b8" stroke-width="1.5"/>
+      <text x="792" y="413" fill="#f8fafc" font-size="11" font-weight="600">Release Manifest Verifier</text>
+      <text x="792" y="428" fill="#94a3b8" font-size="8">Cryptographic SHA-256 Pinning</text>
+      <text x="792" y="441" fill="#94a3b8" font-size="8">Validates DLLs, DBs, Rules &amp; Models</text>
+
+      <!-- LEGEND (Placed below all boundary boxes) -->
+      <g transform="translate(40, 545)">
+        <rect x="0" y="0" width="970" height="50" rx="6" fill="#090e24" stroke="#1e293b" stroke-width="1"/>
+        <text x="15" y="29" fill="#94a3b8" font-size="10" font-weight="600">LEGEND:</text>
+        
+        <circle cx="95" cy="25" r="5" fill="#22d3ee"/>
+        <text x="105" y="29" fill="#cbd5e1" font-size="9">Fyne UI Layer</text>
+
+        <circle cx="215" cy="25" r="5" fill="#34d399"/>
+        <text x="225" y="29" fill="#cbd5e1" font-size="9">Core Go Scanner</text>
+
+        <circle cx="360" cy="25" r="5" fill="#fbbf24"/>
+        <text x="370" y="29" fill="#cbd5e1" font-size="9">CGO Deep Inspection (YARA+ONNX)</text>
+
+        <circle cx="615" cy="25" r="5" fill="#a78bfa"/>
+        <text x="625" y="29" fill="#cbd5e1" font-size="9">SQLite Database</text>
+
+        <circle cx="750" cy="25" r="5" fill="#fb7185"/>
+        <text x="760" y="29" fill="#cbd5e1" font-size="9">DPAPI / AES Vault</text>
+      </g>
+    </svg>
+  </div>
+
+  <div class="cards-grid">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-dot emerald"></div>
+        <h3>Core Scanning &amp; Threat Ingestion</h3>
+      </div>
+      <ul>
+        <li>• <strong>High-Throughput Walker:</strong> Concurrent multi-core processing with 1 MiB streaming buffer.</li>
+        <li>• <strong>Threat Database:</strong> 30,703 live malicious SHA-256 signatures ingested from 8 global feeds.</li>
+        <li>• <strong>Cache Engine:</strong> SQLite WAL mode verifying mtime, file size, and file SHA-256 hash.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-dot amber"></div>
+        <h3>Deep Inspection Subsystem</h3>
+      </div>
+      <ul>
+        <li>• <strong>Native CGO YARA:</strong> 10 compiled rulesets (193 rules, 3,413 lines) covering APTs &amp; ransomware.</li>
+        <li>• <strong>ONNX Machine Learning:</strong> 4096-byte opcode window for zero-day binary classification.</li>
+        <li>• <strong>Lifecycle Safety:</strong> Explicit resource destruction preventing CGO memory leaks.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-dot rose"></div>
+        <h3>Cryptographic Vault &amp; UI</h3>
+      </div>
+      <ul>
+        <li>• <strong>Windows DPAPI:</strong> Hardware/user-bound master key encryption via CryptProtectData.</li>
+        <li>• <strong>AES-256-GCM Vault:</strong> Chunked authenticated quarantine with full rollback restoration.</li>
+        <li>• <strong>Fyne v2.6.3 GUI:</strong> Thread-safe UI updates, live metrics, and generational scan token isolation.</li>
+      </ul>
+    </div>
+  </div>
+
+  <footer>
+    <span>MALSHOT SECURITY AUDIT &copy; 2026 // DEEP INSPECTION AUDITED</span>
+    <span>MSYS2 MinGW-w64 // Go 1.24 // Fyne v2.6.3</span>
+  </footer>
+</body>
+</html>

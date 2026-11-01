@@ -1,0 +1,72 @@
+# ==========================================
+# MalShot - Production .gitignore
+# ==========================================
+
+# Binaries & Build Artifacts
+malshot.exe
+malshot
+*.exe
+*.exe~
+*.dll.a
+dist/
+build/
+bin/
+
+# Debug Symbols & Profiling
+*.pdb
+*.prof
+*.pprof
+*.out
+
+# Runtime State & Quarantine (Per-installation secrets)
+local_state.db
+local_state.db-wal
+local_state.db-shm
+local_state.db-journal
+quarantine_vault/
+*.key
+
+# Native Toolchain & Build Scratch
+native/
+autom4te.cache/
+*.o
+*.a
+*.la
+*.lo
+*.log
+config.log
+config.status
+
+# Python Bytecode & Environments
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+ENV/
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDE, Editors & Agent Workspace
+.agents/
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+
+# Operating System Files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+
+# Temporary & Backup Files
+*.tmp
+*.temp
+*.bak

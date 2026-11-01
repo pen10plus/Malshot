@@ -1,0 +1,322 @@
+MALSHOT DEFENDER - CURRENT PROJECT STATE REPORT
+================================================
+
+Assessment date: 2026-10-14
+Assessment basis: MALSHOT_QA_SECURITY_REPORT.md and remediation verification
+
+OVERALL STATUS
+--------------
+
+Current rating: CONDITIONALLY READY FOR FURTHER TESTING; NOT YET READY FOR
+UNCONDITIONAL PRODUCTION SECURITY DEPLOYMENT.
+
+The project has completed a substantial remediation pass. The main cache,
+quarantine, SQLite concurrency, scan shutdown, native-session lifecycle, and
+UI stale-event issues identified during the audit have been addressed in the
+source tree. Normal Go tests, race tests, Go vet, Python compilation checks,
+and focused remediation tests pass.
+
+The main remaining limitation is that the deep-inspection CGO/YARA path has
+not been compiled or executed in this environment because pkg-config and the
+required native development toolchain are unavailable. The project therefore
+needs a native-toolchain CI/release validation before it can be considered
+fully verified.
+
+VERIFIED HEALTH
+---------------
+
+Passed checks:
+
+1. go test ./...
+2. go test -race ./internal/scanner ./internal/ui
+3. go vet ./...
+4. python -m py_compile db_manager.py package_release.py test_malshot.py
+5. Focused cache, quarantine, and concurrent SQLite remediation tests
+
+Blocked check:
+
+1. go test -tags deepinspection ./internal/scanner
+   Reason: pkg-config is unavailable and the YARA/CGO native build
+   prerequisites are not installed in the current environment.
+
+SECURITY STATE
+--------------
+
+Resolved or materially mitigated:
+
+1. Cache bypass through same-size/same-mtime file replacement
+   - Clean-cache acceptance now validates the current file SHA-256 digest
+     against the stored cache hash.
+   - A regression test confirms replacement content is not accepted as clean.
+
+2. Hardcoded quarantine encryption key
+   - The compiled fixed key was removed.
+   - A random 32-byte per-installation key is generated and stored with
+     restrictive permissions under the vault.
+   - Concurrent key initialization is synchronized.
+
+3. Quarantine memory exhaustion
+   - Quarantine no longer loads the whole file with os.ReadFile.
+   - Data is processed in bounded 1 MiB chunks.
+   - Each encrypted chunk receives a fresh cryptographically random nonce.
+
+4. Quarantine path traversal
+   - Source paths are cleaned.
+   - Vault output is generated only beneath an absolute vault root.
+   - Destination containment is checked.
+   - A regression test confirms ../ input cannot create an outside-vault
+     payload.
+
+5. SQLite worker contention
+   - Database connection pools are bounded.
+   - SQLite busy timeout and WAL configuration remain enabled.
+   - Eight concurrent cache writers are covered by a regression test.
+
+6. ONNX native lifecycle
+   - Session state tracks closure.
+   - Inference and destruction are serialized.
+   - Session state is removed from the global map during destruction.
+   - Initialization failures clean up allocated tensors.
+
+7. Scan shutdown safety
+   - Active scans can be cancelled during engine shutdown.
+   - Database closure waits for scan completion before closing connections.
+
+8. UI stale event handling
+   - Scan generation tokens prevent events from an earlier scan from
+     updating a later scan's UI.
+   - Threat counters now use consistent fallback handling.
+   - Quarantine database reads occur asynchronously instead of directly in
+     the Fyne list callbacks.
+
+FUNCTIONAL STATE
+----------------
+
+Working and tested:
+
+- Recursive file discovery and regular-file filtering
+- SHA-256 file hashing
+- Signature database lookup
+- Clean-file cache update and validation
+- Concurrent worker scanning
+- Scan cancellation and single-scan enforcement
+- Quarantine payload creation and audit logging
+- UI event marshalling through fyne.Do
+- Atomic scan counters
+- Concurrent local database writes
+
+Partially verified:
+
+- YARA rule compilation and scanning
+- ONNX model initialization and inference
+- Full deep-inspection pipeline integration
+- Native DLL loading and release packaging
+- Multi-gigabyte end-to-end scanning
+
+The above items are partially verified because the required native CGO
+toolchain was unavailable. The normal Engine workflow also requires a
+release-level smoke test to confirm that deep inspection is actually enabled
+and invoked in the intended scan mode.
+
+CURRENT TEST-CASE STATUS
+------------------------
+
+TC-SEC-01 - Path Traversal in Quarantine
+Status: PASS
+Path cleaning and vault-root checks are implemented and regression-tested.
+
+TC-SEC-02 - AES Nonce Collision
+Status: PASS at implementation level
+crypto/rand is used for fresh nonces, including per encrypted chunk. A
+large-scale collision test and native release test should still be run in CI.
+
+TC-PERF-01 - Large File / RAM Exhaustion
+Status: PASS for the remediation design
+Hashing is streaming and quarantine encryption is bounded to 1 MiB chunks.
+A real multi-gigabyte load test has not been run in the current environment.
+
+TC-CONC-01 - Database Lock Under Load
+Status: PASS
+Connection pools are bounded and eight concurrent write operations pass.
+Long-duration production load testing is still recommended.
+
+TC-UI-01 - Rapid Scan Restart
+Status: PASS by implementation and unit coverage
+The engine prevents overlapping scans, coordinates cancellation, and the UI
+filters stale events by scan generation.
+
+TC-ERR-01 - Missing Engine Assets
+Status: PASS for explicit initialization failure behavior
+Missing or invalid engine assets return errors rather than silent success.
+The complete YARA/ONNX runtime behavior remains blocked by the unavailable
+native build environment.
+
+REMAINING RISKS AND ACTIONS
+---------------------------
+
+1. Install pkg-config, MinGW/CGO dependencies, YARA development libraries,
+   and ONNX Runtime development libraries in CI.
+
+2. Run:
+   go test -tags deepinspection ./internal/scanner
+   with real YARA rules, ONNX model, and runtime DLL paths.
+
+3. Add a release smoke test that verifies:
+   - required DLLs and model files are present;
+   - missing/corrupt assets produce visible UI diagnostics;
+   - deep scan invokes YARA and ONNX;
+   - native resources are destroyed cleanly.
+
+4. Replace the file-based quarantine key with an OS-backed protected secret
+   store, such as Windows DPAPI, before handling sensitive user data in
+   production.
+
+5. Add an authenticated quarantine restore/decryption path with key versioning
+   and recovery behavior for interrupted audit or source-removal operations.
+
+6. Add a true multi-gigabyte performance test and long-duration SQLite
+   contention test.
+
+7. Surface incomplete directory walks, unreadable files, and per-file scan
+   failures in the UI rather than reporting only a generic successful finish.
+
+FINAL CONCLUSION
+----------------
+
+MalShot is in an improved and testable state with the primary high- and
+medium-severity findings remediated in source code. The project is suitable
+for continued integration testing and security hardening.
+
+It should not yet be classified as fully production-ready because the native
+deep-inspection path has not been built or exercised in the current
+environment, the quarantine key is file-protected rather than OS-backed, and
+large-scale performance and release smoke tests remain outstanding.
+
+NATIVE CGO / RELEASE RE-VERIFICATION UPDATE
+--------------------------------------------
+
+Native environment:
+
+- YARA pkg-config version: 4.3.2
+- GCC: available from the MSYS2 UCRT64 toolchain
+- pkg-config: available from C:\msys64\ucrt64\bin
+- CGO_ENABLED: 1
+- Required OpenSSL linker flags: -lssl -lcrypto
+
+Command executed:
+
+go test -v -race -tags deepinspection ./...
+
+Result: PASS
+
+Observed successful checks:
+
+- Temporary Test_Signature YARA rule matched the marker
+  MALSHOT_DEEP_INSPECTION_TEST.
+- The full deep-inspection E2E test passed.
+- ONNX initialization and inference passed with a confidence score of 0.0012.
+- YARA rules were destroyed after scanning.
+- ONNX tensors and session destruction completed successfully.
+- Cache lookup, SHA-256 signature lookup, YARA, ONNX, and quarantine phases
+  completed in sequence.
+- No race detector warnings were reported.
+- The test process exited successfully; this is not equivalent to a formal
+  native heap leak proof or a Valgrind/Windows Application Verifier run.
+
+Release smoke check:
+
+- dist\malshot.exe: present
+- dist\signatures.db: present
+- dist\local_state.db: present
+- dist\rules\e2e.yar: present
+- dist\lstm_malware.onnx: present
+- dist\onnxruntime.dll: present
+- dist\libcrypto-3-x64.dll: present
+
+DPAPI VERIFICATION RESULT
+-------------------------
+
+Status: IMPLEMENTED AND TESTED ON WINDOWS
+
+The quarantine implementation now uses Windows DPAPI through
+CryptProtectData and CryptUnprotectData with CRYPTPROTECT_UI_FORBIDDEN.
+The protected key is stored at:
+
+quarantine_vault\vault.key
+
+The raw 32-byte AES key is generated once, protected before persistence, and
+returned to memory only for active quarantine initialization. The key buffer
+is explicitly zeroed immediately after AES-256 cipher initialization.
+
+Legacy quarantine_vault\.quarantine.key files are migrated to vault.key and
+removed after successful protection.
+
+Windows integration tests cover:
+
+- DPAPI protect/unprotect round-trip
+- Missing-key generation
+- Protected key persistence
+- Legacy key migration
+
+Production release decision after native verification:
+
+- YARA/ONNX/CGO verification: PASS
+- Full tagged race suite: PASS
+- Release asset presence: PASS
+- DPAPI quarantine requirement: PASS
+- Overall release status: CONDITIONALLY VERIFIED; BLOCKED FOR PRODUCTION
+  only until formal native heap verification and code signing are completed.
+
+FORMAL NATIVE MEMORY LEAK VERIFICATION UPDATE
+----------------------------------------------
+
+Requested formal verification date: 2026-10-14
+
+Native verifier availability:
+
+- Dr. Memory: not installed or discoverable
+- Windows Application Verifier: not installed or discoverable
+- GFlags/UMDH: not installed or discoverable
+- Valgrind: not installed or discoverable
+
+Because no native heap verifier is installed, a formal proof of zero native
+heap leaks could not be produced. The Go race detector and Go heap profiler
+cannot prove that allocations made inside YARA, ONNX Runtime, or other C
+libraries are fully released.
+
+Substitute native lifecycle stress verification:
+
+- CGO_ENABLED=1
+- GODEBUG=cgocheck=1
+- YARA 4.3.2 through pkg-config
+- OpenSSL linker flags enabled
+- -race enabled
+- YARA marker smoke test repeated three times
+- Full YARA + ONNX + quarantine E2E test repeated three times
+- All repetitions passed
+- CGO pointer-checking warnings: 0
+- Race detector warnings: 0
+- Native initialization or cleanup test failures: 0
+
+The Go heap profile was inspected with go tool pprof. It reported allocation
+sites from the test workload, including QuarantineFile, database setup, and
+temporary-directory cleanup. This was an alloc_space profile, not an
+in-use-space native heap profile, and therefore is not evidence of a native
+leak-free process.
+
+Formal memory-verification status:
+
+- Native leak proof: NOT ESTABLISHED
+- Repeated native lifecycle stress: PASS
+- Go race detection: PASS with 0 warnings
+- CGO pointer checking: PASS with 0 warnings
+- Production release gate: remains blocked for DPAPI and formal native heap
+  verification.
+
+Recommended next step:
+
+Install and run Dr. Memory or Windows Application Verifier with page heap
+against a dedicated deep-inspection smoke executable. Capture the verifier
+exit status and leak report after multiple InitYara/ScanWithYara/Destroy,
+InitONNX/ScanWithLSTM/Destroy, and quarantine cycles. Do not classify the
+result as a formal proof until that native report is clean.

@@ -1,0 +1,286 @@
+{
+  "version": "v2.0",
+  "data": [
+    {
+      "title": "MalShot Architecture and Quarantine Cryptography",
+      "paragraphs": [
+        {
+          "qas": [
+            {
+              "question": "What encryption algorithm is used by MalShot to secure quarantined files?",
+              "id": "malshot_qa_001",
+              "answers": [
+                {
+                  "text": "AES-256-GCM chunked encryption",
+                  "answer_start": 45
+                }
+              ],
+              "is_impossible": false
+            },
+            {
+              "question": "How are quarantined master encryption keys protected on Windows?",
+              "id": "malshot_qa_002",
+              "answers": [
+                {
+                  "text": "Windows Data Protection API (DPAPI)",
+                  "answer_start": 272
+                }
+              ],
+              "is_impossible": false
+            },
+            {
+              "question": "What is the chunk size used during quarantine encryption?",
+              "id": "malshot_qa_003",
+              "answers": [
+                {
+                  "text": "1 MiB chunks",
+                  "answer_start": 143
+                }
+              ],
+              "is_impossible": false
+            },
+            {
+              "question": "Does MalShot upload quarantined files to an external cloud storage provider by default?",
+              "id": "malshot_qa_004",
+              "answers": [],
+              "is_impossible": true
+            }
+          ],
+          "context": "MalShot isolates malicious files by applying AES-256-GCM chunked encryption directly on the local machine. Files are streamed and encrypted in 1 MiB chunks with unique random nonces. The master encryption key is bound to the local Windows machine and user context via the Windows Data Protection API (DPAPI). All isolated files are stored locally in the quarantine vault under the MSQ2 header format with zero telemetry egress."
+        },
+        {
+          "qas": [
+            {
+              "question": "मैलशॉट क्वारंटाइन की गई फाइलों को कैसे सुरक्षित करता है?",
+              "id": "malshot_qa_005_hi",
+              "answers": [
+                {
+                  "text": "AES-256-GCM एन्क्रिप्शन",
+                  "answer_start": 46
+                }
+              ],
+              "is_impossible": false
+            },
+            {
+              "question": "एन्क्रिप्शन कुंजी को सुरक्षित रखने के लिए किस विंडोज सुरक्षा तंत्र का उपयोग किया जाता है?",
+              "id": "malshot_qa_006_hi",
+              "answers": [
+                {
+                  "text": "Windows DPAPI (Data Protection API)",
+                  "answer_start": 155
+                }
+              ],
+              "is_impossible": false
+            },
+            {
+              "question": "क्या मैलशॉट स्वचालित रूप से संक्रमित फाइलों को इंटरनेट पर अपलोड करता है?",
+              "id": "malshot_qa_007_hi",
+              "answers": [],
+              "is_impossible": true
+            }
+          ],
+          "context": "मैलशॉट स्थानीय कंप्यूटर पर संक्रमित फाइलों को AES-256-GCM एन्क्रिप्शन का उपयोग करके सुरक्षित रूप से अलग करता है। एन्क्रिप्शन कुंजी को सुरक्षित रखने के लिए Windows DPAPI (Data Protection API) का उपयोग किया जाता है, जिससे यह सुनिश्चित होता है कि केवल अधिकृत उपयोगकर्ता ही फाइलों को पुनर्स्थापित कर सके।"
+        }
+      ]
+    },
+    {
+      "title": "Ransomware Remediation and Incident Response",
+      "paragraphs": [
+        {
+          "qas": [
+            {
+              "question": "What is the primary initial containment step when a ransomware infection is detected on a host?",
+              "id": "ransomware_qa_001",
+              "answers": [
+                {
+                  "text": "immediately isolate the host from the local network and internet",
+                  "answer_start": 70
+                }
+              ],
+              "is_impossible": false
+            },
+            {
+              "question": "Why should organizations avoid rebooting an encrypted system before forensic memory acquisition?",
+              "id": "ransomware_qa_002",
+              "answers": [
+                {
+                  "text": "rebooting clears volatile RAM where encryption keys and active C2 connections may reside",
+                  "answer_start": 229
+                }
+              ],
+              "is_impossible": false
+            },
+            {
+              "question": "Which ransomware group is known for using double extortion by leaking exfiltrated data?",
+              "id": "ransomware_qa_003",
+              "answers": [
+                {
+                  "text": "LockBit",
+                  "answer_start": 338
+                }
+              ],
+              "is_impossible": false
+            }
+          ],
+          "context": "When responding to an active ransomware outbreak, security teams must immediately isolate the host from the local network and internet by disconnecting network cables and disabling Wi-Fi adapters. Incident responders advise that rebooting clears volatile RAM where encryption keys and active C2 connections may reside. Threat actors like LockBit deploy double extortion tactics, exfiltrating confidential intellectual property prior to deploying file-encrypting payloads."
+        },
+        {
+          "qas": [
+            {
+              "question": "रैनसमवेयर संक्रमण का पता चलने पर पहला सुरक्षा कदम क्या होना चाहिए?",
+              "id": "ransomware_qa_004_hi",
+              "answers": [
+                {
+                  "text": "सिस्टम को तुरंत नेटवर्क और इंटरनेट से अलग करना",
+                  "answer_start": 59
+                }
+              ],
+              "is_impossible": false
+            },
+            {
+              "question": "रैनसमवेयर से प्रभावित कंप्यूटर को तुरंत रीबूट क्यों नहीं करना चाहिए?",
+              "id": "ransomware_qa_005_hi",
+              "answers": [
+                {
+                  "text": "मेमोरी (RAM) में मौजूद महत्वपूर्ण डिजिटल साक्ष्य और एन्क्रिप्शन कुंजियां नष्ट हो सकती हैं",
+                  "answer_start": 221
+                }
+              ],
+              "is_impossible": false
+            }
+          ],
+          "context": "रैनसमवेयर हमले की स्थिति में सबसे महत्वपूर्ण प्रारंभिक कदम सिस्टम को तुरंत नेटवर्क और इंटरनेट से अलग करना है ताकि मैलवेयर अन्य कंप्यूटरों में न फैल सके। विशेषज्ञों के अनुसार, सिस्टम को तुरंत रीबूट नहीं करना चाहिए क्योंकि मेमोरी (RAM) में मौजूद महत्वपूर्ण डिजिटल साक्ष्य और एन्क्रिप्शन कुंजियां नष्ट हो सकती हैं।"
+        }
+      ]
+    },
+    {
+      "title": "YARA Heuristics and Signature Matching",
+      "paragraphs": [
+        {
+          "qas": [
+            {
+              "question": "What is the purpose of YARA rules in endpoint malware detection?",
+              "id": "yara_qa_001",
+              "answers": [
+                {
+                  "text": "identifying and classifying malware samples based on textual and binary patterns",
+                  "answer_start": 38
+                }
+              ],
+              "is_impossible": false
+            },
+            {
+              "question": "What threat feed sources are integrated into MalShot's signature database?",
+              "id": "yara_qa_002",
+              "answers": [
+                {
+                  "text": "MalwareBazaar, ThreatFox, URLhaus, and VX-Underground",
+                  "answer_start": 203
+                }
+              ],
+              "is_impossible": false
+            },
+            {
+              "question": "How many verified threat signatures are stored in MalShot's signatures database?",
+              "id": "yara_qa_003",
+              "answers": [
+                {
+                  "text": "30,703 verified SHA-256 threat signatures",
+                  "answer_start": 313
+                }
+              ],
+              "is_impossible": false
+            }
+          ],
+          "context": "YARA rules assist security engines in identifying and classifying malware samples based on textual and binary patterns within PE headers, strings, and opcode segments. In MalShot, threat signatures from MalwareBazaar, ThreatFox, URLhaus, and VX-Underground are compiled into an indexed SQLite database containing 30,703 verified SHA-256 threat signatures for rapid multi-core lookup."
+        },
+        {
+          "qas": [
+            {
+              "question": "यारा (YARA) नियमों का मुख्य उद्देश्य क्या है?",
+              "id": "yara_qa_004_hi",
+              "answers": [
+                {
+                  "text": "टेक्स्ट और बाइनरी पैटर्न के आधार पर मैलवेयर की पहचान और वर्गीकरण करना",
+                  "answer_start": 39
+                }
+              ],
+              "is_impossible": false
+            },
+            {
+              "question": "मैलशॉट के डेटाबेस में कितने सक्रिय मैलवेयर हस्ताक्षर मौजूद हैं?",
+              "id": "yara_qa_005_hi",
+              "answers": [
+                {
+                  "text": "30,703 सत्यापित SHA-256 हस्ताक्षर",
+                  "answer_start": 147
+                }
+              ],
+              "is_impossible": false
+            }
+          ],
+          "context": "यारा (YARA) नियम सुरक्षा प्रणालियों को टेक्स्ट और बाइनरी पैटर्न के आधार पर मैलवेयर की पहचान और वर्गीकरण करना संभव बनाते हैं। मैलशॉट सुरक्षा स्कैनर 30,703 सत्यापित SHA-256 हस्ताक्षर का उपयोग करके संदिग्ध फाइलों का तुरंत मिलान करता है।"
+        }
+      ]
+    },
+    {
+      "title": "Zero-Day Threat Detection and Machine Learning",
+      "paragraphs": [
+        {
+          "qas": [
+            {
+              "question": "How does deep inspection detect zero-day threats that lack existing SHA-256 signatures?",
+              "id": "zeroday_qa_001",
+              "answers": [
+                {
+                  "text": "inspecting the first 4,096 bytes of executable files using a deep neural network",
+                  "answer_start": 60
+                }
+              ],
+              "is_impossible": false
+            },
+            {
+              "question": "What confidence threshold triggers a zero-day alert in MalShot?",
+              "id": "zeroday_qa_002",
+              "answers": [
+                {
+                  "text": "score of 0.80 or higher",
+                  "answer_start": 213
+                }
+              ],
+              "is_impossible": false
+            }
+          ],
+          "context": "Zero-day malware evasion is countered in deep inspection by inspecting the first 4,096 bytes of executable files using a deep neural network executed via ONNX Runtime. When neural inference generates a confidence score of 0.80 or higher, the engine classifies the file as an anomalous zero-day threat and flags it for isolation."
+        },
+        {
+          "qas": [
+            {
+              "question": "जीरो-डे मैलवेयर का पता लगाने के लिए मैलशॉट कितने बाइट्स का विश्लेषण करता है?",
+              "id": "zeroday_qa_003_hi",
+              "answers": [
+                {
+                  "text": "पहले 4,096 बाइट्स",
+                  "answer_start": 67
+                }
+              ],
+              "is_impossible": false
+            },
+            {
+              "question": "मैलशॉट में जीरो-डे चेतावनी जारी करने के लिए न्यूनतम स्कोर क्या है?",
+              "id": "zeroday_qa_004_hi",
+              "answers": [
+                {
+                  "text": "0.80 (80%) या उससे अधिक",
+                  "answer_start": 133
+                }
+              ],
+              "is_impossible": false
+            }
+          ],
+          "context": "मैलशॉट जीरो-डे खतरों की पहचान करने के लिए निष्पादन योग्य फाइलों के पहले 4,096 बाइट्स का गहन विश्लेषण करता है। जब न्यूरल नेटवर्क मॉडल 0.80 (80%) या उससे अधिक का स्कोर देता है, तो सिस्टम उपयोगकर्ता को तुरंत सतर्क करता है।"
+        }
+      ]
+    }
+  ]
+}
