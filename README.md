@@ -1,4 +1,4 @@
-# 🛡️ MalShot — Offline-First Malware Defender & Threat Analyzer
+# MalShot — Offline Malware Defender & Threat Analyzer
 
 [![Go Version](https://img.shields.io/badge/Go-1.22+-00ADD8?style=flat&logo=go)](https://go.dev/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -11,7 +11,7 @@
 
 ---
 
-## 🌟 Key Highlights
+##  Key Highlights
 
 - **Offline-First Security**: Operates autonomously without requiring active internet connectivity. All databases, models, and heuristics are self-contained.
 - **3-Tier Hybrid Detection Pipeline**:
@@ -24,7 +24,7 @@
 
 ---
 
-## 🏗️ Detection Architecture
+##  Detection Architecture
 
 ```
                        [ Target Files / Folders ]
@@ -73,7 +73,7 @@
 
 ---
 
-## 🚀 Quick Start
+##  Quick Start
 
 ### 1. Prerequisites
 
@@ -124,7 +124,7 @@ python colab_bridge.py --dashboard
 
 ---
 
-## 🔒 Quarantine Vault & Security Model
+##  Quarantine Vault & Security Model
 
 MalShot ensures that suspicious or infected executables cannot execute or alter host system files:
 
@@ -135,7 +135,7 @@ MalShot ensures that suspicious or infected executables cannot execute or alter 
 
 ---
 
-## 🧠 Threat Intelligence & Signature Engine
+##  Threat Intelligence & Signature Engine
 
 The included `signatures.db` is pre-populated with **30,700+ verified malware signatures** collected from open threat intelligence feeds:
 
@@ -157,7 +157,7 @@ python db_manager.py --query <sha256_hash>
 
 ---
 
-## ⚡ Google Colab GPU Bridge
+##  Google Colab GPU Bridge
 
 For resource-constrained workstations, MalShot can offload neural BiLSTM inference to a remote GPU via the Colab Bridge:
 
@@ -171,7 +171,7 @@ For resource-constrained workstations, MalShot can offload neural BiLSTM inferen
 
 ---
 
-## 🧪 Verification & Automated Testing
+##  Verification & Automated Testing
 
 MalShot includes a comprehensive test suite covering concurrency, encryption round-trips, cache validation, and UI event safety.
 
@@ -188,7 +188,7 @@ go test -v -race -tags deepinspection ./internal/scanner
 
 ---
 
-## 📁 Repository Layout
+## Repository Layout
 
 ```
 MalShot/
@@ -226,7 +226,7 @@ MalShot/
 
 ---
 
-## 📄 License
+## License
 
 MalShot is released under the [MIT License](LICENSE).
 You are free to use, modify, and distribute this software for educational, research, and commercial purposes.
